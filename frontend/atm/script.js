@@ -1,5 +1,5 @@
 
-const API="http://localhost:8080/api";
+const API="https://mm-bank-backend-2ca5.onrender.com/api";
 const ACCOUNT="1000000001";
 const TEST_PIN="1234";
 const $=id=>document.getElementById(id);
