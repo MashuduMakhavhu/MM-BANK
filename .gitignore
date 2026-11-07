@@ -1,0 +1,23 @@
+# Java build files
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Local databases
+backend/data/
+backend/data-backup-*/
+*.mv.db
+*.trace.db
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/

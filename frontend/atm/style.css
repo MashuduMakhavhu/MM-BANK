@@ -1,0 +1,53 @@
+
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#061a35;--blue:#0878cf;--cyan:#55d6f5;--white:#fff;--muted:#718096}
+body{font-family:Arial,sans-serif;background:#e9f0f8;min-height:100vh;color:white}
+.atm-screen{min-height:100vh;background:radial-gradient(ellipse at 50% 35%,#1266a8 0%,#093e72 48%,#061a35 100%);display:flex;flex-direction:column;padding:28px 6%;position:relative;overflow:hidden}
+.atm-screen:before{content:"";position:absolute;width:450px;height:450px;border:1px solid #ffffff12;border-radius:50%;top:15%;left:-250px;pointer-events:none}
+.atm-screen:after{content:"";position:absolute;width:550px;height:550px;border:1px solid #ffffff12;border-radius:50%;bottom:-350px;right:-180px;pointer-events:none}
+.header{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;padding:12px 18px;background:#ffffff0b;border:1px solid #ffffff18;border-radius:15px;backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:13px;font-size:19px;font-weight:800;letter-spacing:4px}
+.logo{background:white;color:#07539b;padding:12px 14px;border-radius:11px;font-weight:900;box-shadow:0 5px 18px #0002}
+.status{font-size:11px;color:#8ee6c2;letter-spacing:1px}
+.screen{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:35px 10px;position:relative;z-index:1}
+.hidden{display:none!important}
+.eyebrow{letter-spacing:6px;color:var(--cyan);font-size:12px;font-weight:bold}
+.welcome{flex-direction:column}
+h1{font-size:clamp(40px,8vw,78px);margin-top:15px;letter-spacing:7px;font-weight:900;text-shadow:0 8px 30px #0003}
+.subtitle{margin-top:12px;color:#d4eaff;font-size:16px;letter-spacing:1px}
+.card-icon{font-size:58px;color:var(--cyan);margin-top:35px;filter:drop-shadow(0 5px 15px #00cfff44)}
+h2{font-size:25px;margin-top:14px;font-weight:800}
+.instruction{margin-top:12px;color:#d4eaff;font-size:14px}
+button{cursor:pointer;font-family:inherit;transition:transform .2s,box-shadow .2s,background .2s}
+button:active{transform:scale(.97)}
+.welcome button{margin-top:30px;padding:17px 52px;border:0;border-radius:9px;background:white;color:#07539b;font-size:14px;font-weight:800;letter-spacing:1.5px;box-shadow:0 8px 25px #0002}
+.welcome button:hover{background:#dff5ff;box-shadow:0 10px 30px #00cfff35}
+.security{margin-top:27px;font-size:12px;color:#c4e7ff;letter-spacing:.5px}
+.card-panel{background:linear-gradient(145deg,#fff,#f0f7ff);color:#07539b;padding:42px 30px;border-radius:19px;width:min(100%,420px);box-shadow:0 25px 70px #001a3d55}
+.card-panel p{margin-top:12px;color:#62758a;font-size:14px}
+.loader{width:38px;height:38px;border:4px solid #dceaf7;border-top-color:#0878cf;border-radius:50%;margin:25px auto 0;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pin-container{width:min(100%,430px);background:linear-gradient(145deg,#fff,#f5f9ff);color:#123b65;border-radius:19px;padding:30px 25px;box-shadow:0 25px 70px #001a3d55;border:1px solid #ffffff}
+.pin-heading h2{font-size:23px;letter-spacing:1.5px}
+.pin-heading p{color:#718096;font-size:13px;margin-top:9px}
+.pin-display{display:flex;justify-content:center;gap:23px;margin:26px 0 14px}
+.pin-display span{font-size:29px;color:#0878cf}
+.message{font-size:13px;color:#64748b;min-height:20px;margin-bottom:16px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;max-width:310px;margin:auto}
+.key{height:60px;border:1px solid #e0e9f3;border-radius:10px;background:#f4f8fd;color:#123b65;font-size:21px;font-weight:700;box-shadow:0 3px 8px #123b6508}
+.key:hover{background:#e4f2ff;border-color:#9bcdf4;box-shadow:0 5px 13px #0878cf18}
+.key.action{font-size:11px;letter-spacing:.7px;color:white;border:0}
+.clear{background:#d99a25}
+.clear:hover{background:#c18416}
+.enter{background:linear-gradient(135deg,#0878cf,#07539b)}
+.enter:hover{background:#07539b}
+.attempts{margin-top:21px;color:#718096;font-size:12px}
+.menu-container{width:min(100%,650px)}
+.menu-container>p{margin-top:10px;color:#d4eaff;font-size:14px}
+.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin-top:30px}
+.menu-option{min-height:88px;border:1px solid #ffffff;border-radius:12px;background:linear-gradient(145deg,#fff,#edf6ff);color:#07539b;font-size:15px;font-weight:800;box-shadow:0 8px 22px #001a3d25;padding:15px}
+.menu-option:hover{background:#dff3ff;transform:translateY(-3px);box-shadow:0 12px 25px #001a3d35}
+.exit-button{background:linear-gradient(135deg,#e5a13b,#c77a16);border:0;border-radius:9px;padding:15px 38px;margin-top:27px;color:white;font-weight:800;font-size:12px;letter-spacing:1px;box-shadow:0 6px 18px #0002}
+.exit-button:hover{background:#c77a16}
+footer{display:flex;justify-content:space-between;gap:15px;font-size:10px;color:#b9d9f4;letter-spacing:1px;position:relative;z-index:1;padding-top:12px}
+@media(max-width:600px){.atm-screen{padding:17px 4%}.header{padding:11px 12px}.brand{font-size:15px;gap:9px;letter-spacing:2px}.logo{padding:10px}.status{font-size:9px}.pin-container{padding:25px 13px}.keypad{gap:8px}.key{height:55px}.menu-grid{gap:10px;margin-top:24px}.menu-option{min-height:78px;font-size:13px;padding:10px}footer{flex-direction:column;text-align:center;gap:6px}.welcome button{padding:16px 42px}}

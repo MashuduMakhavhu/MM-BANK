@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M&M Bank ATM</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main class="atm-screen">
+
+    <header class="header">
+        <div class="brand">
+            <div class="logo">M&M</div>
+            <span>BANK</span>
+        </div>
+        <div class="status">● SYSTEM ONLINE</div>
+    </header>
+
+    <section id="welcomeScreen" class="screen welcome">
+        <p class="eyebrow">WELCOME TO</p>
+        <h1>M&M BANK</h1>
+        <p class="subtitle">Your money. Your control.</p>
+
+        <div class="card-icon">▰</div>
+        <h2>Welcome</h2>
+        <p class="instruction">Insert your bank card to begin.</p>
+
+        <button id="startButton">INSERT CARD</button>
+
+        <p class="security">🔒 Secure banking experience</p>
+    </section>
+
+    <section id="cardScreen" class="screen hidden">
+        <div class="card-panel">
+            <div class="card-icon">▰</div>
+            <h2>Card detected</h2>
+            <p>Please wait while we read your card...</p>
+            <div class="loader"></div>
+        </div>
+    </section>
+
+    <section id="pinScreen" class="screen hidden">
+        <div class="pin-container">
+
+            <div class="pin-heading">
+                <h2>ENTER YOUR PIN</h2>
+                <p>Please enter your four-digit PIN</p>
+            </div>
+
+            <div class="pin-display" id="pinDisplay">
+                <span>○</span>
+                <span>○</span>
+                <span>○</span>
+                <span>○</span>
+            </div>
+
+            <p id="message" class="message">
+                Enter your PIN to continue
+            </p>
+
+            <div class="keypad">
+                <button class="key" data-number="1">1</button>
+                <button class="key" data-number="2">2</button>
+                <button class="key" data-number="3">3</button>
+
+                <button class="key" data-number="4">4</button>
+                <button class="key" data-number="5">5</button>
+                <button class="key" data-number="6">6</button>
+
+                <button class="key" data-number="7">7</button>
+                <button class="key" data-number="8">8</button>
+                <button class="key" data-number="9">9</button>
+
+                <button class="key action clear" id="clearButton">
+                    CLEAR
+                </button>
+
+                <button class="key" data-number="0">0</button>
+
+                <button class="key action enter" id="enterButton">
+                    ENTER
+                </button>
+            </div>
+
+            <p class="attempts" id="attempts">
+                3 attempts remaining
+            </p>
+
+        </div>
+    </section>
+
+    <section id="menuScreen" class="screen hidden">
+        <div class="menu-container">
+            <h2 id="customerGreeting">Welcome, Customer</h2>
+            <p>Select a transaction to continue.</p>
+
+            <div class="menu-grid">
+                <button id="withdrawButton" class="menu-option">
+                    Withdraw Cash
+                </button>
+
+                <button id="balanceButton" class="menu-option">
+                    Balance Enquiry
+                </button>
+
+                <button id="depositButton" class="menu-option">
+                    Deposit Cash
+                </button>
+
+                <button id="transferButton" class="menu-option">
+                    Transfer Funds
+                </button>
+
+                <button id="statementButton" class="menu-option">
+                    Mini Statement
+                </button>
+            </div>
+
+            <button id="exitButton" class="exit-button">
+                END SESSION
+            </button>
+        </div>
+    </section>
+
+    <footer>
+        <span>© 2026 M&M BANK</span>
+        <span>Secure banking experience</span>
+    </footer>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
