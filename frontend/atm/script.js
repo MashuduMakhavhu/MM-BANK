@@ -32,6 +32,18 @@ styles.textContent=`
 `;
 document.head.appendChild(styles);
 
+styles.textContent+=`
+.atm-card{width:220px;height:135px;margin:25px auto;background:linear-gradient(135deg,#123b65,#0878cf);border-radius:13px;color:white;padding:18px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 12px 25px #123b6540}.atm-card span{font-size:12px;font-weight:bold}.atm-card strong{font-size:13px;letter-spacing:1px}.atm-cash{width:190px;height:105px;margin:25px auto;background:linear-gradient(135deg,#d8eadb,#a9d2b0);border:2px solid #6c9d79;border-radius:9px;color:#28613a;display:flex;align-items:center;justify-content:center;flex-direction:column}.atm-cash span{font-size:35px;font-weight:900}.atm-cash strong{font-size:11px;letter-spacing:3px}
+.card-motion{animation:cardMotion 1.2s ease-in-out infinite alternate}
+.cash-motion{animation:cashMotion .8s ease-in-out infinite alternate}
+@keyframes cardMotion{from{transform:translateY(-8px)}to{transform:translateY(8px)}}
+@keyframes cashMotion{from{transform:scale(.9) rotate(-5deg)}to{transform:scale(1.08) rotate(5deg)}}
+.receipt-paper{background:#f8fafc;color:#123b65;padding:16px;border:1px dashed #9aabba;border-radius:5px;text-align:center}
+.receipt-paper h3{margin:5px}
+.receipt-paper p{font-size:12px}
+`;
+
+
 function showScreen(screen){
  [welcomeScreen,cardScreen,pinScreen,menuScreen].forEach(s=>s.classList.add("hidden"));
  screen.classList.remove("hidden");
@@ -141,6 +153,7 @@ function busy(button,state){
  if(button){button.disabled=state;button.textContent=state?"PLEASE WAIT...":"CONFIRM";}
 }
 
+
 // WITHDRAWAL
 function withdrawScreen(){
  panel("WITHDRAW CASH","Choose your account type.",`
@@ -159,36 +172,115 @@ function withdrawScreen(){
   };
  });
 }
+
 function withdrawalAmounts(){
  panel("WITHDRAW CASH","Select an amount or enter your own.",`
  <div class="bank-grid">
   ${[100,200,500,1000,2000,3000].map(n=>`<button class="bank-btn" data-amount="${n}">${money(n)}</button>`).join("")}
  </div>
  <input id="ownAmount" type="number" min="1" step="0.01" placeholder="Enter your own amount (R)">
- <div class="bank-actions"><button class="bank-btn primary" id="withdrawConfirm">CONFIRM WITHDRAWAL</button></div>`);
- let selected=0;
+ <div class="bank-actions"><button class="bank-btn primary" id="withdrawConfirm">CONTINUE</button></div>`);
  document.querySelectorAll("[data-amount]").forEach(btn=>btn.onclick=()=>{
-  selected=Number(btn.dataset.amount);
-  $("ownAmount").value=selected;
-  note("Selected "+money(selected));
+  $("ownAmount").value=btn.dataset.amount;
+  note("Selected "+money(btn.dataset.amount));
  });
- $("withdrawConfirm").onclick=async()=>{
+ $("withdrawConfirm").onclick=()=>{
   const amount=Number($("ownAmount").value);
   if(!Number.isFinite(amount)||amount<=0){note("Enter a valid amount.",true);return;}
   if(amount>Number(currentAccount.balance)){note("Insufficient funds.",true);return;}
-  const button=$("withdrawConfirm");
-  button.disabled=true;button.textContent="PROCESSING...";
-  try{
-   const result=await api(`/accounts/${encodeURIComponent(ACCOUNT)}/withdraw`,{
-    method:"POST",body:JSON.stringify({amount})
-   });
-   await refreshAccount();
-   panel("WITHDRAWAL SUCCESSFUL","Please collect your cash.",`
-    <div class="bank-balance">${money(result.amount)}</div>
-    <div class="bank-row"><span>Account balance</span><strong>${money(currentAccount.balance)}</strong></div>
-    <div class="bank-row"><span>Transaction</span><strong>#${safe(result.transactionId)}</strong></div>`);
-  }catch(e){note(e.message,true);button.disabled=false;button.textContent="CONFIRM WITHDRAWAL";}
+  receiptChoice(amount);
  };
+}
+
+function receiptChoice(amount){
+ panel("WITHDRAWAL RECEIPT","Would you like a printed receipt?",`
+ <div class="bank-balance">${money(amount)}</div>
+ <div class="bank-grid">
+  <button class="bank-btn primary" id="receiptYes">YES, PRINT RECEIPT</button>
+  <button class="bank-btn" id="receiptNo">NO RECEIPT</button>
+ </div>`);
+ $("receiptYes").onclick=()=>processWithdrawal(amount,true);
+ $("receiptNo").onclick=()=>processWithdrawal(amount,false);
+}
+
+let withdrawalInProgress=false;
+
+async function processWithdrawal(amount,receipt){
+ if(withdrawalInProgress)return;
+ withdrawalInProgress=true;
+ const buttons=document.querySelectorAll("#panelContent button");
+ buttons.forEach(b=>b.disabled=true);
+ panel("PROCESSING WITHDRAWAL","Please wait while we securely process your transaction.",`
+ <div class="bank-balance">${money(amount)}</div>
+ <p>Please do not leave this screen.</p>`);
+ $("backButton").disabled=true;
+ $("panelExit").disabled=true;
+ try{
+  const result=await api(`/accounts/${encodeURIComponent(ACCOUNT)}/withdraw`,{
+   method:"POST",body:JSON.stringify({amount})
+  });
+  await refreshAccount();
+  withdrawalInProgress=false;
+  showCardCollection({
+   amount:Number(result.amount??amount),
+   balance:currentAccount.balance,
+   transactionId:result.transactionId,
+   receipt
+  });
+ }catch(e){
+  withdrawalInProgress=false;
+  panel("WITHDRAWAL STATUS UNKNOWN",e.message,`
+   <p>Check your balance and mini statement before attempting another withdrawal.</p>
+   <button class="bank-btn primary" id="returnMenu">RETURN TO MENU</button>`);
+  $("backButton").disabled=true;
+  $("returnMenu").onclick=renderMenu;
+ }
+}
+
+function lockCollectionNavigation(){
+ $("backButton").disabled=true;
+ $("panelExit").disabled=true;
+}
+
+function showCardCollection(tx){
+ panel("PLEASE COLLECT YOUR CARD","Your withdrawal has been processed.",`
+  <div class="atm-card card-motion"><span>M&M BANK</span><strong>•••• •••• •••• 0001</strong></div>
+  <p>Please remove your bank card from the ATM.</p>
+  <button class="bank-btn primary" id="cardCollected">I HAVE COLLECTED MY CARD</button>`);
+ lockCollectionNavigation();
+ $("cardCollected").onclick=()=>showCashCollection(tx);
+}
+
+function showCashCollection(tx){
+ panel("PLEASE COLLECT YOUR CASH","Your cash is ready.",`
+  <div class="atm-cash cash-motion"><span>R</span><strong>RANDS</strong></div>
+  <div class="bank-balance">${money(tx.amount)}</div>
+  <p>Please collect your cash.</p>
+  <button class="bank-btn primary" id="cashCollected">I HAVE COLLECTED MY CASH</button>`);
+ lockCollectionNavigation();
+ $("cashCollected").onclick=()=>{
+  if(tx.receipt)showWithdrawalReceipt(tx);
+  else endSession();
+ };
+}
+
+function showWithdrawalReceipt(tx){
+ const reference=tx.transactionId??("ATM-"+Date.now());
+ panel("TRANSACTION RECEIPT","Withdrawal completed successfully.",`
+  <div class="receipt-paper">
+   <h3>M&M BANK</h3>
+   <p>ATM WITHDRAWAL RECEIPT</p>
+   <hr>
+   <div class="bank-row"><span>Reference</span><strong>${safe(reference)}</strong></div>
+   <div class="bank-row"><span>Date</span><strong>${new Date().toLocaleString("en-ZA")}</strong></div>
+   <div class="bank-row"><span>Account</span><strong>${safe(ACCOUNT)}</strong></div>
+   <div class="bank-row"><span>Amount</span><strong>${money(tx.amount)}</strong></div>
+   <div class="bank-row"><span>Balance</span><strong>${money(tx.balance)}</strong></div>
+   <p>Thank you for banking with M&M Bank.</p>
+  </div>
+  <button class="bank-btn primary" id="finishWithdrawal">FINISH AND LOG OUT</button>`);
+ lockCollectionNavigation();
+ $("finishWithdrawal").onclick=endSession;
 }
 
 // DEPOSIT
