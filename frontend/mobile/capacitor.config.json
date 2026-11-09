@@ -1,5 +1,8 @@
 {
   "appId": "com.mmbank.mobile",
   "appName": "M&M BANK",
-  "webDir": "www"
+  "webDir": "www",
+  "server": {
+    "hostname": "mm-bank-mobile.onrender.com"
+  }
 }
