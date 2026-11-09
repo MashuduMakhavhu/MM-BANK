@@ -1,5 +1,5 @@
 const $=id=>document.getElementById(id);
-const API=(location.hostname==="localhost"||location.hostname==="127.0.0.1")?"http://localhost:8080/api":"https://mm-bank-backend-2ca5.onrender.com/api";
+const API=(location.protocol==="http:"&&(location.hostname==="localhost"||location.hostname==="127.0.0.1"))?"http://localhost:8080/api":"https://mm-bank-backend-2ca5.onrender.com/api";
 let ACCOUNT=null;
 let balanceVisible=true,liveBalance=null,toastTimer,allTransactionData=[],currentFilter="ALL";
 
