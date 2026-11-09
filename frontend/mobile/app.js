@@ -334,7 +334,7 @@ async function post(path,data){
  const cookiePresent=document.cookie.split(";").some(x=>x.trim().startsWith("XSRF-TOKEN="));
  const r=await fetch(API+path,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json","X-XSRF-TOKEN":csrfToken},body:JSON.stringify(data||{})});
  const result=await r.json().catch(()=>({}));
- if(!r.ok)throw Error("HTTP "+r.status+" | "+path+" | CSRF cookie visible: "+cookiePresent+" | Token length: "+csrfToken.length);
+ if(!r.ok)throw Error("HTTP "+r.status+" | "+path+" | Origin: "+location.origin+" | CSRF cookie: "+cookiePresent+" | Token length: "+csrfToken.length+" | Response: "+JSON.stringify(result));
  return result;
 }
 function authMessage(message,error=true){
