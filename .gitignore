@@ -21,3 +21,17 @@ backend/data-backup-*/
 .DS_Store
 .idea/
 .vscode/
+
+# Mobile app dependencies
+frontend/mobile/node_modules/
+
+# Android build outputs and local settings
+frontend/mobile/android/.gradle/
+frontend/mobile/android/local.properties
+frontend/mobile/android/build/
+frontend/mobile/android/app/build/
+frontend/mobile/android/capacitor-cordova-android-plugins/build/
+
+# Android signing credentials
+*.jks
+*.keystore
