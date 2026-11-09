@@ -331,11 +331,10 @@ async function refreshCsrf(){
 }
 async function post(path,data){
  await refreshCsrf();
- const r=await fetch(API+path,{method:"POST",credentials:"include",
- headers:{"Content-Type":"application/json","X-XSRF-TOKEN":csrfToken},
- body:JSON.stringify(data||{})});
+ const cookiePresent=document.cookie.split(";").some(x=>x.trim().startsWith("XSRF-TOKEN="));
+ const r=await fetch(API+path,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json","X-XSRF-TOKEN":csrfToken},body:JSON.stringify(data||{})});
  const result=await r.json().catch(()=>({}));
- if(!r.ok)throw Error(result.message||result.error||"Request failed ("+r.status+")");
+ if(!r.ok)throw Error("HTTP "+r.status+" | "+path+" | CSRF cookie visible: "+cookiePresent+" | Token length: "+csrfToken.length);
  return result;
 }
 function authMessage(message,error=true){
