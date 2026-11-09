@@ -13,6 +13,8 @@ public interface BankAccountRepository
 
     Optional<BankAccount> findByAccountNumber(String accountNumber);
 
+    Optional<BankAccount> findByCustomer_CustomerNumber(String customerNumber);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM BankAccount a WHERE a.accountNumber = :number")
     Optional<BankAccount> findByAccountNumberForUpdate(

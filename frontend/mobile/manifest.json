@@ -1,0 +1,8 @@
+{
+  "name":"M&M Bank Mobile",
+  "short_name":"M&M Bank",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#07172b",
+  "theme_color":"#07172b"
+}

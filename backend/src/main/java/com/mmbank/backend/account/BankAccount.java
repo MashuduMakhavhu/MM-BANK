@@ -1,5 +1,8 @@
 package com.mmbank.backend.account;
 
+import com.mmbank.backend.customer.Customer;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
@@ -16,6 +19,11 @@ public class BankAccount {
 
     @Column(nullable = false)
     private String accountHolderName;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -55,6 +63,14 @@ public class BankAccount {
 
     public void setAccountHolderName(String accountHolderName) {
         this.accountHolderName = accountHolderName;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 
     public AccountType getAccountType() {

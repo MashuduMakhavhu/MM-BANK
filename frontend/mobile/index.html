@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07172b">
+<title>M&M BANK</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-icon">M</div>
+    <h2>M&M BANK</h2>
+  </div>
+  <button class="profile" id="profileBtn">M</button>
+</header>
+<section id="authPage" class="auth-page">
+ <div class="auth-brand"><div class="brand-icon">M</div><h1>M&M BANK</h1></div>
+ <p class="auth-kicker">YOUR MONEY. YOUR CONTROL.</p>
+ <h2 id="authTitle">Welcome back</h2>
+ <p id="authDescription">Sign in securely to your account.</p>
+ <form id="loginForm">
+  <label for="loginCustomer">Customer number</label>
+  <input id="loginCustomer" inputmode="numeric" required placeholder="Enter customer number">
+  <label for="loginPassword">Password</label>
+  <input id="loginPassword" type="password" required placeholder="Enter your password">
+  <button class="auth-submit" type="submit">Sign in</button>
+ </form>
+ <form id="registerForm" hidden>
+  <label for="regCustomer">Customer number</label>
+  <input id="regCustomer" required placeholder="Your customer number">
+  <label for="regAccount">Bank account number</label>
+  <input id="regAccount" inputmode="numeric" required placeholder="Your account number">
+  <label for="regCode">Activation code</label>
+  <input id="regCode" type="password" required placeholder="Branch activation code">
+  <label for="regPassword">Create password</label>
+  <input id="regPassword" type="password" minlength="10" maxlength="72" required placeholder="At least 10 characters">
+  <button class="auth-submit" type="submit">Activate account</button>
+ </form>
+ <p id="authMessage" role="status"></p>
+ <button id="authSwitch" class="auth-switch">First time here? Activate your account</button>
+ <p class="auth-security">Protected banking session · Demo application</p>
+</section>
+
+
+<main>
+  <section class="welcome">
+    <div>
+      <p class="muted">WELCOME BACK</p>
+      <h1 id="welcomeName">Mashudu</h1>
+    </div>
+    <span class="status"><i></i> Secure session</span>
+  </section>
+
+  <section class="balance-card">
+    <div class="balance-head">
+      <span>TOTAL BALANCE</span>
+      <button id="toggleBalance">HIDE</button>
+    </div>
+    <h1 id="balance">R 4,500.00</h1>
+    <div class="account-info">
+      <span>SAVINGS ACCOUNT</span>
+      <span>•••• 0001</span>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h3>Favourites</h3>
+      <button id="editFav">EDIT</button>
+    </div>
+    <div class="actions">
+      <button class="action" data-action="Transfer"><span>↗</span>Transfer</button>
+      <button class="action" data-action="Payments"><span>◇</span>Payments</button>
+      <button class="action" data-action="Airtime"><span>▤</span>Airtime</button>
+      <button class="action" data-action="Statements"><span>≡</span>Statements</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h3>Recent activity</h3>
+      <button data-action="All transactions">VIEW ALL</button>
+    </div>
+    <div class="transactions" id="transactions">
+      <div class="transaction">
+        <div class="transaction-icon">↓</div>
+        <div class="transaction-details"><strong>Cash deposit</strong><small>ATM · 07 Nov 2026</small></div>
+        <strong class="credit">+ R 2,000.00</strong>
+      </div>
+      <div class="transaction">
+        <div class="transaction-icon">↗</div>
+        <div class="transaction-details"><strong>Account transfer</strong><small>Bank transfer · 06 Nov 2026</small></div>
+        <strong class="debit">− R 500.00</strong>
+      </div>
+      <div class="transaction">
+        <div class="transaction-icon">↓</div>
+        <div class="transaction-details"><strong>Cash deposit</strong><small>ATM · 05 Nov 2026</small></div>
+        <strong class="credit">+ R 1,000.00</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h3>Manage your money</h3></div>
+    <div class="feature-card" data-action="Spend tracker">
+      <div><span>FINANCIAL OVERVIEW</span><h3>Spend tracker</h3><p>Understand where your money goes.</p></div>
+      <div class="feature-icon">◉</div>
+    </div>
+  </section>
+</main>
+
+
+
+
+<section id="transactPage" class="transact-page" hidden>
+ <div class="transact-heading">
+  <p class="muted">MOVE YOUR MONEY</p>
+  <h1>Transact</h1>
+  <p>Send money and manage everyday payments.</p>
+ </div>
+ <div class="transact-options">
+  <button class="transact-option active" data-mode="transfer"><span>↗</span><strong>Transfer</strong><small>Send money</small></button>
+  <button class="transact-option" data-mode="payments"><span>◇</span><strong>Payments</strong><small>Pay accounts</small></button>
+  <button class="transact-option" data-mode="airtime"><span>▤</span><strong>Airtime</strong><small>Buy data or airtime</small></button>
+ </div>
+ <div id="transferPanel" class="transfer-panel">
+  <h3>Send money</h3>
+  <p class="form-description">Transfer funds to another M&M Bank account.</p>
+  <label for="recipientAccount">Recipient account number</label>
+  <div class="lookup-row">
+   <input id="recipientAccount" inputmode="numeric" maxlength="10" placeholder="Enter account number">
+   <button id="lookupRecipient">Verify</button>
+  </div>
+  <div id="recipientResult" class="recipient-result" hidden></div>
+  <label for="transferAmount">Amount (ZAR)</label>
+  <input id="transferAmount" type="number" min="1" step="0.01" placeholder="0.00">
+  <div class="transfer-summary" id="transferSummary" hidden>
+   <div><span>From</span><strong>•••• 0001</strong></div>
+   <div><span>Recipient</span><strong id="summaryRecipient"></strong></div>
+   <div><span>Amount</span><strong id="summaryAmount"></strong></div>
+  </div>
+  <button id="confirmTransfer" class="primary-transfer" disabled>Review transfer</button>
+  <p class="transfer-note">Demo banking environment. Verify all details before confirming.</p>
+ </div>
+ <div id="otherTransactPanel" class="transfer-panel" hidden>
+  <h3 id="otherTransactTitle">Payments</h3>
+  <p id="otherTransactText" class="form-description">This service will be added in a future stage.</p>
+ </div>
+</section>
+\n<section id="cardsPage" class="cards-page" hidden>
+ <div class="cards-heading">
+  <p class="muted">YOUR BANKING</p>
+  <h1>My cards</h1>
+  <p>Manage your cards and security settings.</p>
+ </div>
+ <div class="bank-card">
+  <div class="bank-card-top">
+   <strong>M&M BANK</strong>
+   <span>VIRTUAL DEBIT</span>
+  </div>
+  <div class="chip"><span></span><span></span><span></span><span></span></div>
+  <div class="card-number" id="cardNumber">•••• •••• •••• 0001</div>
+  <div class="bank-card-bottom">
+   <div><small>CARD HOLDER</small><strong>MASHUDU MAKHAVHU</strong></div>
+   <div><small>EXPIRES</small><strong id="cardExpiry">••/••</strong></div>
+   <div class="card-network">VISA</div>
+  </div>
+  <span class="card-demo-label">DEMO CARD</span>
+ </div>
+ <div class="card-status-row">
+  <div><span class="status-dot" id="cardStatusDot"></span><strong id="cardStatus">Card active</strong></div>
+  <span>Virtual debit card</span>
+ </div>
+ <div class="card-controls">
+  <button id="revealCard" class="card-control">
+   <span>◉</span><strong>Show details</strong><small>Card number and CVV</small>
+  </button>
+  <button id="freezeCard" class="card-control">
+   <span>Ⅱ</span><strong>Freeze card</strong><small>Temporarily block card use</small>
+  </button>
+ </div>
+ <div class="card-details" id="cardDetails" hidden>
+  <div><span>Card number</span><strong>5399 2400 1234 0001</strong></div>
+  <div><span>Expiry date</span><strong>09/29</strong></div>
+  <div><span>Security code (CVV)</span><strong>482</strong></div>
+  <p>Demo details only. This is not a real payment card.</p>
+ </div>
+ <div class="card-security">
+  <strong>Card security</strong>
+  <p>Freezing a card is designed to temporarily prevent new card transactions. This demo only changes the displayed card status.</p>
+ </div>
+</section>
+\n<section id="activityPage" class="activity-page" hidden>
+ <div class="activity-title">
+  <p class="muted">YOUR ACCOUNT</p>
+  <h1>Activity</h1>
+  <p>Track your money, every step of the way.</p>
+ </div>
+ <div class="activity-tools">
+  <input id="activitySearch" type="search" placeholder="Search transactions...">
+  <button id="refreshActivity">↻</button>
+ </div>
+ <div class="activity-filters">
+  <button class="filter active" data-filter="ALL">All</button>
+  <button class="filter" data-filter="DEPOSIT">Deposits</button>
+  <button class="filter" data-filter="WITHDRAWAL">Withdrawals</button>
+  <button class="filter" data-filter="TRANSFER">Transfers</button>
+ </div>
+ <div class="activity-summary">
+  <span>TRANSACTION HISTORY</span>
+  <span id="activityCount">0 transactions</span>
+ </div>
+ <div class="transactions" id="allTransactions">
+  <p class="empty-activity">Your transactions will appear here.</p>
+ </div>
+</section>
+\n
+<section id="profilePage" class="profile-page" hidden>
+ <div class="profile-heading">
+  <span>YOUR ACCOUNT</span>
+  <h1>My Profile</h1>
+  <p>Manage your personal information and preferences.</p>
+ </div>
+ <div class="profile-identity">
+  <div class="profile-avatar">M</div>
+  <div><h2>Mashudu Makhavhu</h2><p>M&M BANK customer</p><span>ACTIVE CUSTOMER</span></div>
+ </div>
+ <div class="profile-group"><h3>Personal information</h3>
+  <button class="profile-option" data-profile-action="Personal details"><span class="profile-symbol">◎</span><span><strong>Personal details</strong><small>View your customer information</small></span><b>›</b></button>
+  <button class="profile-option" data-profile-action="Contact information"><span class="profile-symbol">⌕</span><span><strong>Contact information</strong><small>Manage your contact details</small></span><b>›</b></button>
+  <button class="profile-option" data-profile-action="Account information"><span class="profile-symbol">▤</span><span><strong>Account information</strong><small>Savings account · •••• 0001</small></span><b>›</b></button>
+ </div>
+ <div class="profile-group"><h3>Security and settings</h3>
+  <button class="profile-option" data-profile-action="Security and privacy"><span class="profile-symbol">◇</span><span><strong>Security and privacy</strong><small>Manage your security preferences</small></span><b>›</b></button>
+  <button class="profile-option" data-profile-action="Notifications"><span class="profile-symbol">◎</span><span><strong>Notifications</strong><small>Manage notification preferences</small></span><b>›</b></button>
+  <button class="profile-option" data-profile-action="App preferences"><span class="profile-symbol">⚙</span><span><strong>App preferences</strong><small>Personalise your app experience</small></span><b>›</b></button>
+ </div>
+ <div class="profile-group"><h3>Help and support</h3>
+  <button class="profile-option" data-profile-action="Help centre"><span class="profile-symbol">?</span><span><strong>Help centre</strong><small>Find answers to common questions</small></span><b>›</b></button>
+  <button class="profile-option" data-profile-action="Contact support"><span class="profile-symbol">✉</span><span><strong>Contact support</strong><small>Get assistance with your account</small></span><b>›</b></button>
+  <button class="profile-option" data-profile-action="About M&M Bank"><span class="profile-symbol">M</span><span><strong>About M&M Bank</strong><small>Application information</small></span><b>›</b></button>
+ </div>
+ <div class="profile-footer"><button data-profile-action="Sign out">Sign out</button><p>M&M BANK · DEMO APPLICATION</p><small>Version 1.0.0</small></div>
+</section>
+
+<nav class="bottom-nav">
+  <button class="nav-item active" data-tab="Home"><span>⌂</span>Home</button>
+  <button class="nav-item" data-tab="Cards"><span>▣</span>Cards</button>
+  <button class="nav-item" data-tab="Transact"><span>↗</span>Transact</button>
+  <button class="nav-item" data-tab="Activity"><span>≡</span>Activity</button>
+  <button class="nav-item" data-tab="Profile"><span>○</span>Profile</button>
+</nav>
+
+<div id="toast"></div>
+<script src="app.js?v=10"></script>
+</body>
+</html>
