@@ -15,6 +15,7 @@ public class CorsConfig {
                 registry.addMapping("/api/**")
                     .allowedOrigins(
                         "https://mm-bank-atm.onrender.com",
+                "https://mm-bank-mobile.onrender.com",
                         "http://127.0.0.1:8000",
                         "http://localhost:8000"
                     )
