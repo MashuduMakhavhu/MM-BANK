@@ -369,7 +369,7 @@ $("loginForm").onsubmit=async e=>{
    customerNumber:$("loginCustomer").value.trim(),
    password:$("loginPassword").value
   });
-  await checkSession();
+  await checkSession(true);
  }catch(err){authMessage(err.message);}
  finally{b.disabled=false;b.textContent="Sign in";}
 };
@@ -395,16 +395,21 @@ $("registerForm").onsubmit=async e=>{
  }catch(err){authMessage(err.message);}
  finally{b.disabled=false;b.textContent="Activate account";}
 };
-async function checkSession(){
+async function checkSession(diagnose=false){
  try{
   const r=await fetch(API+"/auth/me",{credentials:"include"});
-  if(!r.ok){showAuth();return;}
+  const detail=await r.text();
+  if(!r.ok){
+   showAuth();
+   if(diagnose)authMessage("Login accepted, but /auth/me returned HTTP "+r.status+" | "+detail);
+   return;
+  }
   document.body.classList.add("authenticated");
   $("authPage").hidden=true;
   await loadDashboard();
  }catch(e){
   showAuth();
-  authMessage("Unable to connect. Check that the backend is running.");
+  if(diagnose)authMessage("Session/dashboard error: "+e.message);
  }
 }
 async function signOut(){
