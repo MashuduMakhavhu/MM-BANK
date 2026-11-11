@@ -401,7 +401,7 @@ async function checkSession(diagnose=false){
   const detail=await r.text();
   if(!r.ok){
    showAuth();
-   if(diagnose)authMessage("Login accepted, but /auth/me returned HTTP "+r.status+" | "+detail);
+   if(diagnose)authMessage("Login accepted, but /auth/me returned HTTP "+r.status+" | Origin: "+location.origin+" | "+detail);
    return;
   }
   document.body.classList.add("authenticated");
