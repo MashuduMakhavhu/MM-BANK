@@ -76,4 +76,29 @@ public class AccountController {
         return ResponseEntity.ok(
                 accountService.getRecentTransactions(accountNumber));
     }
+
+    @PatchMapping("/{accountNumber}/freeze")
+    public ResponseEntity<BankAccount> freezeAccount(
+            @PathVariable String accountNumber) {
+        return ResponseEntity.ok(accountService.freezeAccount(accountNumber));
+    }
+
+    @PatchMapping("/{accountNumber}/suspend")
+    public ResponseEntity<BankAccount> suspendAccount(
+            @PathVariable String accountNumber) {
+        return ResponseEntity.ok(accountService.suspendAccount(accountNumber));
+    }
+
+    @PatchMapping("/{accountNumber}/activate")
+    public ResponseEntity<BankAccount> activateAccount(
+            @PathVariable String accountNumber) {
+        return ResponseEntity.ok(accountService.activateAccount(accountNumber));
+    }
+
+    @PatchMapping("/{accountNumber}/close")
+    public ResponseEntity<BankAccount> closeAccount(
+            @PathVariable String accountNumber) {
+        return ResponseEntity.ok(accountService.closeAccount(accountNumber));
+    }
+
 }

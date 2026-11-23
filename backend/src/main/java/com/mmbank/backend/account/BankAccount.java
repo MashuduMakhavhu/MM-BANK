@@ -31,6 +31,10 @@ public class BankAccount {
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal balance;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AccountStatus status = AccountStatus.ACTIVE;
+
 
     public BankAccount() {
     }
@@ -87,5 +91,40 @@ public class BankAccount {
 
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
+    }
+
+    public AccountStatus getStatus() {
+        return status;
+    }
+
+    public void freeze() {
+        ensureNotClosed();
+        status = AccountStatus.FROZEN;
+    }
+
+    public void suspend() {
+        ensureNotClosed();
+        status = AccountStatus.SUSPENDED;
+    }
+
+    public void activate() {
+        ensureNotClosed();
+        status = AccountStatus.ACTIVE;
+    }
+
+    public void close() {
+        ensureNotClosed();
+        if (balance == null || balance.signum() != 0) {
+            throw new IllegalStateException(
+                    "An account must have a zero balance before it can be closed");
+        }
+        status = AccountStatus.CLOSED;
+    }
+
+    private void ensureNotClosed() {
+        if (status == AccountStatus.CLOSED) {
+            throw new IllegalStateException(
+                    "A closed account cannot be reactivated or changed");
+        }
     }
 }
