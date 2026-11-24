@@ -3,10 +3,10 @@ package com.mmbank.backend.account;
 import com.mmbank.backend.customer.Customer;
 import com.mmbank.backend.customer.CustomerRepository;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -15,9 +15,6 @@ public class AccountIdentityController {
 
     private final CustomerRepository customers;
     private final BankAccountRepository accounts;
-
-    @Value("${MM_ADMIN_KEY:}")
-    private String adminKey;
 
     public AccountIdentityController(
         CustomerRepository customers,
@@ -28,18 +25,13 @@ public class AccountIdentityController {
     }
 
     @PutMapping("/accounts/{accountNumber}/identity")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Transactional
     public String updateIdentity(
         @PathVariable String accountNumber,
-        @RequestHeader("X-Admin-Key") String key,
+
         @Valid @RequestBody UpdateAccountIdentityRequest request
     ) {
-        if (adminKey.isBlank() || !adminKey.equals(key)) {
-            throw new ResponseStatusException(
-                HttpStatus.FORBIDDEN, "Invalid admin key"
-            );
-        }
-
         Customer customer = customers.findByCustomerNumber(
             request.customerNumber()
         ).orElseThrow(() -> new ResponseStatusException(

@@ -22,21 +22,19 @@
  <h2 id="authTitle">Welcome back</h2>
  <p id="authDescription">Sign in securely to your account.</p>
  <form id="loginForm">
-  <label for="loginCustomer">Customer number</label>
-  <input id="loginCustomer" inputmode="numeric" required placeholder="Enter customer number">
-  <label for="loginPassword">Password</label>
-  <input id="loginPassword" type="password" required placeholder="Enter your password">
+  <label for="loginCustomer">Bank account number</label>
+  <input id="loginCustomer" inputmode="numeric" autocomplete="username" required placeholder="Enter account number">
+  <label for="loginPassword">Six-digit app PIN</label>
+  <input id="loginPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="current-password" required placeholder="Enter your six-digit PIN">
   <button class="auth-submit" type="submit">Sign in</button>
  </form>
  <form id="registerForm" hidden>
-  <label for="regCustomer">Customer number</label>
-  <input id="regCustomer" required placeholder="Your customer number">
   <label for="regAccount">Bank account number</label>
-  <input id="regAccount" inputmode="numeric" required placeholder="Your account number">
+  <input id="regAccount" inputmode="numeric" autocomplete="username" required placeholder="Your account number">
   <label for="regCode">Activation code</label>
-  <input id="regCode" type="password" required placeholder="Branch activation code">
-  <label for="regPassword">Create password</label>
-  <input id="regPassword" type="password" minlength="10" maxlength="72" required placeholder="At least 10 characters">
+  <input id="regCode" type="password" autocomplete="one-time-code" required placeholder="Your activation code">
+  <label for="regPassword">Create your six-digit app PIN</label>
+  <input id="regPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" required placeholder="Choose a six-digit PIN">
   <button class="auth-submit" type="submit">Activate account</button>
  </form>
  <p id="authMessage" role="status"></p>
@@ -61,8 +59,10 @@
     </div>
     <h1 id="balance">R 4,500.00</h1>
     <div class="account-info">
-      <span>SAVINGS ACCOUNT</span>
-      <span>•••• 0001</span>
+      <span id="selectedAccountType">ACCOUNT</span>
+      <select id="accountSelector" aria-label="Choose bank account">
+        <option value="">Loading accounts...</option>
+      </select>
     </div>
   </section>
 

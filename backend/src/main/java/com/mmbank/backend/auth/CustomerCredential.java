@@ -16,18 +16,26 @@ public class CustomerCredential {
     @JoinColumn(name = "customer_id", nullable = false, unique = true)
     private Customer customer;
 
+    @Column(name = "password_hash", nullable = false)
+    private String appPinHash;
+
     @Column(nullable = false)
-    private String passwordHash;
+    private int failedAttempts = 0;
+
+    private LocalDateTime lockedUntil;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    private LocalDateTime activatedAt;
+
     public CustomerCredential() {}
 
-    public CustomerCredential(Customer customer, String passwordHash) {
+    public CustomerCredential(Customer customer, String appPinHash) {
         this.customer = customer;
-        this.passwordHash = passwordHash;
+        this.appPinHash = appPinHash;
         this.createdAt = LocalDateTime.now();
+        this.activatedAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -38,15 +46,35 @@ public class CustomerCredential {
         return customer;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
+    public String getAppPinHash() {
+        return appPinHash;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public void setAppPinHash(String appPinHash) {
+        this.appPinHash = appPinHash;
+    }
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public void setFailedAttempts(int failedAttempts) {
+        this.failedAttempts = failedAttempts;
+    }
+
+    public LocalDateTime getLockedUntil() {
+        return lockedUntil;
+    }
+
+    public void setLockedUntil(LocalDateTime lockedUntil) {
+        this.lockedUntil = lockedUntil;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public LocalDateTime getActivatedAt() {
+        return activatedAt;
     }
 }

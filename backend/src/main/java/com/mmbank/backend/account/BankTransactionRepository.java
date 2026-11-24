@@ -9,4 +9,6 @@ public interface BankTransactionRepository
     List<BankTransaction>
     findTop10ByAccount_AccountNumberOrderByCreatedAtDesc(
             String accountNumber);
+
+    List<BankTransaction> findTop10ByOrderByCreatedAtDesc();
 }

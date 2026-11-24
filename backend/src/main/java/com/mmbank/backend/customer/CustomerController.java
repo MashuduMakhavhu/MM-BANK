@@ -3,10 +3,12 @@ package com.mmbank.backend.customer;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
 @RestController
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
 @RequestMapping("/api/customers")
 public class CustomerController {
 

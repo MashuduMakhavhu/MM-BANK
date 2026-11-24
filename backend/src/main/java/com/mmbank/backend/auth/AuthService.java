@@ -1,126 +1,157 @@
 package com.mmbank.backend.auth;
 
-import com.mmbank.backend.customer.Customer;
-import com.mmbank.backend.customer.CustomerRepository;
+import com.mmbank.backend.account.AccountStatus;
 import com.mmbank.backend.account.BankAccount;
 import com.mmbank.backend.account.BankAccountRepository;
+import com.mmbank.backend.customer.Customer;
+import com.mmbank.backend.customer.CustomerRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.LocalDateTime;
 
 @Service
 public class AuthService {
 
+    private static final int MAX_FAILED_ATTEMPTS = 5;
+    private static final int LOCKOUT_MINUTES = 15;
+
     private final CustomerRepository customers;
     private final BankAccountRepository accounts;
     private final CustomerCredentialRepository credentials;
-    private final PasswordEncoder encoder;
+    private final AppPinService appPinService;
 
     @Value("${mmbank.auth.activation-code:}")
     private String activationCode;
 
-    public AuthService(CustomerRepository customers,
-                       CustomerCredentialRepository credentials,
-                       BankAccountRepository accounts,
-                       PasswordEncoder encoder) {
+    public AuthService(
+            CustomerRepository customers,
+            CustomerCredentialRepository credentials,
+            BankAccountRepository accounts,
+            AppPinService appPinService) {
         this.customers = customers;
         this.accounts = accounts;
         this.credentials = credentials;
-        this.encoder = encoder;
+        this.appPinService = appPinService;
     }
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (activationCode == null || activationCode.isBlank()) {
             throw new ResponseStatusException(
-                HttpStatus.SERVICE_UNAVAILABLE,
-                "Registration is not configured");
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Registration is not configured");
         }
 
         boolean validCode = MessageDigest.isEqual(
-            activationCode.getBytes(StandardCharsets.UTF_8),
-            request.activationCode().getBytes(StandardCharsets.UTF_8));
+                activationCode.getBytes(StandardCharsets.UTF_8),
+                request.activationCode().getBytes(StandardCharsets.UTF_8));
 
         if (!validCode) {
             throw new ResponseStatusException(
-                HttpStatus.FORBIDDEN, "Invalid activation code");
+                    HttpStatus.FORBIDDEN, "Invalid activation code");
         }
-
-        Customer customer = customers.findByCustomerNumber(
-            request.customerNumber()).orElseThrow(() ->
-                new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Customer not found"));
 
         BankAccount account = accounts.findByAccountNumber(
-            request.accountNumber()).orElseThrow(() ->
+                request.accountNumber()).orElseThrow(() ->
                 new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Account not found"));
+                        HttpStatus.NOT_FOUND, "Account not found"));
 
-        if (!account.getAccountHolderName().trim().equalsIgnoreCase(
-                customer.getFullName().trim())) {
+        Customer customer = account.getCustomer();
+
+        if (customer == null ||
+                account.getStatus() != AccountStatus.ACTIVE ||
+                !account.getAccountHolderName().trim().equalsIgnoreCase(
+                        customer.getFullName().trim())) {
             throw new ResponseStatusException(
-                HttpStatus.FORBIDDEN, "Account ownership could not be verified");
+                    HttpStatus.FORBIDDEN,
+                    "Account is not eligible for mobile activation");
         }
-
-        if (account.getCustomer() != null &&
-                !account.getCustomer().getId().equals(customer.getId())) {
-            throw new ResponseStatusException(
-                HttpStatus.CONFLICT, "Account is linked to another customer");
-        }
-
-        account.setCustomer(customer);
-        accounts.save(account);
 
         if (credentials.findByCustomer_CustomerNumber(
-                request.customerNumber()).isPresent()) {
+                customer.getCustomerNumber()).isPresent()) {
             throw new ResponseStatusException(
-                HttpStatus.CONFLICT, "Login already registered");
+                    HttpStatus.CONFLICT,
+                    "Mobile banking is already activated");
         }
 
         CustomerCredential credential = new CustomerCredential(
-            customer, encoder.encode(request.password()));
+                customer, appPinService.encode(request.appPin()));
 
         credentials.save(credential);
 
         return new AuthResponse(
-            customer.getCustomerNumber(),
-            customer.getFullName(),
-            "Registration successful");
+                customer.getFullName(),
+                "Mobile banking activated successfully");
+    }
+
+    @Transactional(noRollbackFor = ResponseStatusException.class)
+    public Customer authenticate(LoginRequest request) {
+        BankAccount account = accounts.findByAccountNumber(
+                request.accountNumber()).orElseThrow(() ->
+                invalidCredentials());
+
+        Customer customer = account.getCustomer();
+
+        if (customer == null || account.getStatus() != AccountStatus.ACTIVE) {
+            throw invalidCredentials();
+        }
+
+        CustomerCredential credential = credentials
+                .findByCustomer_CustomerNumber(customer.getCustomerNumber())
+                .orElseThrow(() -> invalidCredentials());
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (credential.getLockedUntil() != null) {
+            if (credential.getLockedUntil().isAfter(now)) {
+                throw new ResponseStatusException(
+                        HttpStatus.LOCKED,
+                        "Too many incorrect PIN attempts. Try again later.");
+            }
+
+            credential.setLockedUntil(null);
+            credential.setFailedAttempts(0);
+        }
+
+        if (!appPinService.matches(
+                request.appPin(), credential.getAppPinHash())) {
+
+            int attempts = credential.getFailedAttempts() + 1;
+            credential.setFailedAttempts(attempts);
+
+            if (attempts >= MAX_FAILED_ATTEMPTS) {
+                credential.setLockedUntil(
+                        now.plusMinutes(LOCKOUT_MINUTES));
+            }
+
+            credentials.save(credential);
+
+            throw invalidCredentials();
+        }
+
+        credential.setFailedAttempts(0);
+        credential.setLockedUntil(null);
+        credentials.save(credential);
+
+        return customer;
     }
 
     @Transactional(readOnly = true)
-    public Customer authenticate(LoginRequest request) {
-        CustomerCredential credential = credentials
-            .findByCustomer_CustomerNumber(request.customerNumber())
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
-                "Invalid customer number or password"
-            ));
-
-        if (!encoder.matches(
-                request.password(),
-                credential.getPasswordHash())) {
-            throw new ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
-                "Invalid customer number or password"
-            );
-        }
-
-        return customers.findByCustomerNumber(request.customerNumber())
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
-                "Invalid customer number or password"
-            ));
-    }
-
     public Customer findCustomer(String customerNumber) {
         return customers.findByCustomerNumber(customerNumber)
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.UNAUTHORIZED, "Session is invalid"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "Session is invalid"));
+    }
+
+    private ResponseStatusException invalidCredentials() {
+        return new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid account number or app PIN");
     }
 }

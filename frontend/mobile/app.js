@@ -69,33 +69,94 @@ function renderActivity(){
  }
  filtered.forEach(t=>container.append(transactionRow(t)));
 }
-async function loadDashboard(){
+let linkedAccounts=[];
+let selectedAccount=null;
+let accountRequestVersion=0;
+
+async function loadSelectedAccount(){
+ if(!selectedAccount)return;
+
+ const requestVersion=++accountRequestVersion;
+ const accountNumber=encodeURIComponent(selectedAccount.accountNumber);
  $("balance").textContent="Loading...";
  $("transactions").textContent="Loading transactions...";
+
  try{
-  const [account,transactions]=await Promise.all([
-   get("/mobile/account"),
-   get("/mobile/transactions")
+  const [balance,transactions]=await Promise.all([
+   get("/mobile/accounts/"+accountNumber+"/balance"),
+   get("/mobile/accounts/"+accountNumber+"/transactions")
   ]);
-  ACCOUNT=String(account.accountNumber);
- liveBalance=Number(account.balance);
+
+  if(requestVersion!==accountRequestVersion)return;
+
+  liveBalance=Number(balance.balance);
   $("balance").textContent=balanceVisible?money(liveBalance):"••••••••";
-  $("welcomeName").textContent=(account.fullName||account.accountHolderName||"Customer").split(" ")[0];
-  const info=document.querySelectorAll(".account-info span");
-  info[0].textContent=(account.accountType||"ACCOUNT")+" ACCOUNT";
-  info[1].textContent="•••• "+ACCOUNT.slice(-4);
+
   allTransactionData=Array.isArray(transactions)?transactions:[];
   renderTransactions(allTransactionData);
   renderActivity();
   setStatus(true);
  }catch(error){
+  if(requestVersion!==accountRequestVersion)return;
+
   $("balance").textContent="Unavailable";
   $("transactions").textContent="Unable to load transactions. Please try again.";
   $("allTransactions").textContent="Unable to load transaction history. Please try again.";
   setStatus(false);
+  console.log("Account loading:",error.message);
+ }
+}
+
+async function loadDashboard(){
+ $("balance").textContent="Loading...";
+ $("transactions").textContent="Loading transactions...";
+
+ try{
+  linkedAccounts=await get("/mobile/accounts");
+
+  if(!Array.isArray(linkedAccounts)||linkedAccounts.length===0){
+   throw Error("No linked bank accounts found.");
+  }
+
+  const selector=$("accountSelector");
+  selector.replaceChildren();
+
+  linkedAccounts.forEach(account=>{
+   const option=document.createElement("option");
+   option.value=account.accountNumber;
+   option.textContent=(account.accountType||"ACCOUNT")+" •••• "+account.accountNumber.slice(-4);
+   selector.append(option);
+  });
+
+  $("welcomeName").textContent=(linkedAccounts[0].fullName||"Customer").split(" ")[0];
+
+  const preferred=linkedAccounts.find(a=>a.accountNumber===ACCOUNT)||linkedAccounts[0];
+  selectedAccount=preferred;
+  ACCOUNT=String(preferred.accountNumber);
+  selector.value=ACCOUNT;
+
+  $("selectedAccountType").textContent=(preferred.accountType||"ACCOUNT")+" ACCOUNT";
+
+  await loadSelectedAccount();
+ }catch(error){
+  $("balance").textContent="Unavailable";
+  $("transactions").textContent="Unable to load transactions. Please try again.";
+  setStatus(false);
   console.log("Bank connection:",error.message);
  }
 }
+
+$("accountSelector").onchange=async()=>{
+ const chosen=linkedAccounts.find(a=>a.accountNumber===$("accountSelector").value);
+ if(!chosen)return;
+
+ selectedAccount=chosen;
+ ACCOUNT=String(chosen.accountNumber);
+ $("selectedAccountType").textContent=(chosen.accountType||"ACCOUNT")+" ACCOUNT";
+
+ await loadSelectedAccount();
+};
+
 $("toggleBalance").onclick=()=>{
  balanceVisible=!balanceVisible;
  $("balance").textContent=balanceVisible?(liveBalance===null?"Unavailable":money(liveBalance)):"••••••••";
@@ -171,7 +232,7 @@ async function lookupRecipient(){
  if(!/^\d{10}$/.test(number)){toast("Enter a valid 10-digit account number.");return;}
  if(number===ACCOUNT){toast("You cannot transfer to your own account.");return;}
  try{
-  const account=await get("/accounts/"+number);
+  const account=await get("/mobile/recipient/"+number);
   verifiedRecipient={number,name:account.accountHolderName||"Account holder"};
   $("recipientResult").textContent="Verified recipient: "+verifiedRecipient.name;
   $("recipientResult").hidden=false;
@@ -308,7 +369,9 @@ $("confirmTransfer").onclick=async()=>{
  const button=$("confirmTransfer");
  button.disabled=true;button.textContent="Processing...";
  try{
-  const result=await post("/mobile/transfer",{
+  if(!selectedAccount)throw Error("Select an account before transferring.");
+
+  const result=await post("/mobile/accounts/"+encodeURIComponent(selectedAccount.accountNumber)+"/transfer",{
    recipientAccountNumber:verifiedRecipient.number,amount
   });
   toast("Transfer completed successfully.");
@@ -356,7 +419,7 @@ $("authSwitch").onclick=()=>{
  $("loginForm").hidden=registering;
  $("registerForm").hidden=!registering;
  $("authTitle").textContent=registering?"Activate your account":"Welcome back";
- $("authDescription").textContent=registering?"Use your customer and account details to get started.":"Sign in securely to your account.";
+ $("authDescription").textContent=registering?"Activate your account using your bank account number and activation code.":"Sign in securely to your account.";
  $("authSwitch").textContent=registering?"Already registered? Sign in":"First time here? Activate your account";
  authMessage("");
 };
@@ -366,8 +429,8 @@ $("loginForm").onsubmit=async e=>{
  b.disabled=true;b.textContent="Signing in...";
  try{
   await post("/auth/login",{
-   customerNumber:$("loginCustomer").value.trim(),
-   password:$("loginPassword").value
+   accountNumber:$("loginCustomer").value.trim(),
+   appPin:$("loginPassword").value
   });
   await checkSession(true);
  }catch(err){authMessage(err.message);}
@@ -379,17 +442,16 @@ $("registerForm").onsubmit=async e=>{
  b.disabled=true;b.textContent="Activating...";
  try{
   await post("/auth/register",{
-   customerNumber:$("regCustomer").value.trim(),
    accountNumber:$("regAccount").value.trim(),
    activationCode:$("regCode").value,
-   password:$("regPassword").value
+   appPin:$("regPassword").value
   });
-  $("loginCustomer").value=$("regCustomer").value.trim();
+  $("loginCustomer").value=$("regAccount").value.trim();
   $("loginPassword").value="";
   $("registerForm").reset();
   $("loginForm").hidden=false;$("registerForm").hidden=true;
   $("authTitle").textContent="Account activated";
-  $("authDescription").textContent="Your login is ready. Sign in with your new password.";
+  $("authDescription").textContent="Your app PIN is ready. Sign in with your account number and six-digit PIN.";
   $("authSwitch").textContent="First time here? Activate your account";
   authMessage("Registration successful. Please sign in.",false);
  }catch(err){authMessage(err.message);}

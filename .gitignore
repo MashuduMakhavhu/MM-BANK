@@ -35,3 +35,7 @@ frontend/mobile/android/capacitor-cordova-android-plugins/build/
 # Android signing credentials
 *.jks
 *.keystore
+
+# Local source backups
+frontend/atm/*.backup
+frontend/mobile/*.before-*

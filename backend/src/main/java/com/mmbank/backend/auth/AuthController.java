@@ -39,12 +39,11 @@ public class AuthController {
         HttpSession session = httpRequest.getSession(true);
         session.setMaxInactiveInterval(900);
         session.setAttribute(
-            "CUSTOMER_NUMBER", customer.getCustomerNumber());
+                "CUSTOMER_NUMBER", customer.getCustomerNumber());
 
         return new AuthResponse(
-            customer.getCustomerNumber(),
-            customer.getFullName(),
-            "Login successful");
+                customer.getFullName(),
+                "Login successful");
     }
 
     @GetMapping("/me")
@@ -53,15 +52,14 @@ public class AuthController {
 
         if (number == null) {
             throw new org.springframework.web.server.ResponseStatusException(
-                HttpStatus.UNAUTHORIZED, "Please log in");
+                    HttpStatus.UNAUTHORIZED, "Please log in");
         }
 
         Customer customer = authService.findCustomer(number.toString());
 
         return new AuthResponse(
-            customer.getCustomerNumber(),
-            customer.getFullName(),
-            "Authenticated");
+                customer.getFullName(),
+                "Authenticated");
     }
 
     @PostMapping("/logout")
@@ -72,6 +70,6 @@ public class AuthController {
             session.invalidate();
         }
 
-        return new AuthResponse(null, null, "Logged out");
+        return new AuthResponse(null, "Logged out");
     }
 }

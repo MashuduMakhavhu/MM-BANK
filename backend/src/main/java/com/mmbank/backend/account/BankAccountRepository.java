@@ -6,14 +6,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.persistence.LockModeType;
+import java.util.List;
 import java.util.Optional;
+import com.mmbank.backend.account.AccountStatus;
 
 public interface BankAccountRepository
         extends JpaRepository<BankAccount, Long> {
 
     Optional<BankAccount> findByAccountNumber(String accountNumber);
 
-    Optional<BankAccount> findByCustomer_CustomerNumber(String customerNumber);
+    long countByStatus(AccountStatus status);
+
+    List<BankAccount> findAllByCustomer_CustomerNumber(String customerNumber);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM BankAccount a WHERE a.accountNumber = :number")

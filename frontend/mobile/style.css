@@ -171,3 +171,23 @@ body:not(.authenticated)>#cardsPage,
 body:not(.authenticated)>#activityPage,
 body:not(.authenticated)>#profilePage{display:none!important}
 body.authenticated #authPage{display:none}
+
+.account-info select {
+  max-width: 65%;
+  background: #123a61;
+  color: #ffffff;
+  border: 1px solid #ffffff45;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 11px;
+  outline: none;
+}
+
+.account-info select:focus {
+  border-color: var(--cyan);
+}
+
+.account-info select option {
+  background: #123a61;
+  color: #ffffff;
+}

@@ -2,12 +2,12 @@ package com.mmbank.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 public class MmBankBackendApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(MmBankBackendApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(MmBankBackendApplication.class, args);
+    }
 }

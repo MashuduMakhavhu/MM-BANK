@@ -1,7 +1,6 @@
 
 const API="https://mm-bank-backend-2ca5.onrender.com/api";
-const ACCOUNT="1000000001";
-const TEST_PIN="1234";
+let cardNumber="";
 const $=id=>document.getElementById(id);
 const welcomeScreen=$("welcomeScreen"),cardScreen=$("cardScreen"),pinScreen=$("pinScreen"),menuScreen=$("menuScreen");
 const pinDisplay=$("pinDisplay"),message=$("message"),attemptsDisplay=$("attempts");
@@ -54,17 +53,31 @@ function money(value){
 function safe(value){
  return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
+async function csrfToken(){
+ const response=await fetch(API+"/auth/csrf",{credentials:"include"});
+ const data=await response.json().catch(()=>null);
+ if(!response.ok||!data?.token) throw new Error("Unable to establish a secure session.");
+ return data.token;
+}
 async function api(path,options={}){
+ const method=(options.method||"GET").toUpperCase();
+ const headers={"Content-Type":"application/json",...(options.headers||{})};
+ if(!["GET","HEAD","OPTIONS"].includes(method)){
+  headers["X-XSRF-TOKEN"]=await csrfToken();
+ }
  const response=await fetch(API+path,{
   ...options,
-  headers:{"Content-Type":"application/json",...(options.headers||{})}
+  method,
+  credentials:"include",
+  headers
  });
  const data=await response.json().catch(()=>null);
  if(!response.ok) throw new Error(data?.message||data?.error||`Bank server error (${response.status})`);
  return data;
 }
 async function refreshAccount(){
- currentAccount=await api("/accounts/"+encodeURIComponent(ACCOUNT));
+ const balance=await api("/atm/balance");
+ currentAccount={...currentAccount,...balance};
  return currentAccount;
 }
 function updatePINDisplay(){
@@ -73,9 +86,27 @@ function updatePINDisplay(){
  });
 }
 $("startButton").addEventListener("click",()=>{
+ $("cardNumber").value="";
+ $("cardMessage").textContent="";
  showScreen(cardScreen);
- setTimeout(()=>showScreen(pinScreen),1500);
 });
+
+$("cardContinueButton").addEventListener("click",()=>{
+ const value=$("cardNumber").value.replace(/\\s+/g,"");
+ if(!/^\\d{16,19}$/.test(value)){
+  $("cardMessage").textContent="Enter a valid 16 to 19 digit card number.";
+  return;
+ }
+ cardNumber=value;
+ enteredPIN="";
+ attempts=3;
+ attemptsDisplay.textContent="3 attempts remaining";
+ message.textContent="Enter your PIN to continue";
+ message.style.color="";
+ updatePINDisplay();
+ showScreen(pinScreen);
+});
+
 document.querySelectorAll("[data-number]").forEach(button=>{
  button.addEventListener("click",()=>{
   if(enteredPIN.length<4&&attempts>0){
@@ -84,35 +115,48 @@ document.querySelectorAll("[data-number]").forEach(button=>{
   }
  });
 });
+
 $("clearButton").addEventListener("click",()=>{
  enteredPIN=enteredPIN.slice(0,-1);
  updatePINDisplay();
 });
+
 $("enterButton").addEventListener("click",async()=>{
  if(attempts<=0)return;
- if(enteredPIN.length!==4){message.textContent="Please enter all four digits.";return;}
- if(enteredPIN!==TEST_PIN){
-  attempts--;
-  enteredPIN="";
-  updatePINDisplay();
-  attemptsDisplay.textContent=attempts+" attempts remaining";
-  message.textContent=attempts?"Incorrect PIN. Try again.":"Session locked. Please restart the ATM.";
-  message.style.color="#d13b3b";
-  if(!attempts)document.querySelectorAll(".key").forEach(k=>k.disabled=true);
+ if(enteredPIN.length!==4){
+  message.textContent="Please enter all four digits.";
   return;
  }
+
  const enter=$("enterButton");
  enter.disabled=true;
- message.textContent="Connecting securely to M&M Bank...";
+ message.textContent="Authenticating with M&M Bank...";
+ message.style.color="";
+
  try{
+  currentAccount=await api("/atm/login",{
+   method:"POST",
+   body:JSON.stringify({cardNumber,pin:enteredPIN})
+  });
   await refreshAccount();
   message.textContent="Account connected!";
   message.style.color="#16834a";
   setTimeout(renderMenu,500);
  }catch(e){
+  attempts=Math.max(0,attempts-1);
   message.textContent=e.message;
   message.style.color="#d13b3b";
- }finally{enter.disabled=false;}
+  attemptsDisplay.textContent=attempts+" attempts remaining";
+  if(attempts===0){
+   message.textContent="Too many attempts. Please restart the ATM.";
+   document.querySelectorAll(".key").forEach(k=>k.disabled=true);
+   enter.disabled=true;
+  }
+ }finally{
+  if(attempts>0)enter.disabled=false;
+  enteredPIN="";
+  updatePINDisplay();
+ }
 });
 
 function renderMenu(){
@@ -216,7 +260,7 @@ async function processWithdrawal(amount,receipt){
  $("backButton").disabled=true;
  $("panelExit").disabled=true;
  try{
-  const result=await api(`/accounts/${encodeURIComponent(ACCOUNT)}/withdraw`,{
+  const result=await api("/atm/withdraw",{
    method:"POST",body:JSON.stringify({amount})
   });
   await refreshAccount();
@@ -273,7 +317,7 @@ function showWithdrawalReceipt(tx){
    <hr>
    <div class="bank-row"><span>Reference</span><strong>${safe(reference)}</strong></div>
    <div class="bank-row"><span>Date</span><strong>${new Date().toLocaleString("en-ZA")}</strong></div>
-   <div class="bank-row"><span>Account</span><strong>${safe(ACCOUNT)}</strong></div>
+   <div class="bank-row"><span>Account</span><strong>${safe(currentAccount.accountNumber)}</strong></div>
    <div class="bank-row"><span>Amount</span><strong>${money(tx.amount)}</strong></div>
    <div class="bank-row"><span>Balance</span><strong>${money(tx.balance)}</strong></div>
    <p>Thank you for banking with M&M Bank.</p>
@@ -292,7 +336,7 @@ function depositScreen(){
   const number=$("depositAccount").value.trim();
   if(!number){note("Enter an account number.",true);return;}
   try{
-   const recipient=await api("/accounts/"+encodeURIComponent(number));
+   const recipient=await api("/atm/recipient/"+encodeURIComponent(number));
    depositAmountScreen(recipient);
   }catch(e){note(e.message,true);}
  };
@@ -307,10 +351,10 @@ function depositAmountScreen(recipient){
   if(!Number.isFinite(amount)||amount<=0){note("Enter a valid amount.",true);return;}
   const button=$("depositConfirm");button.disabled=true;button.textContent="PROCESSING...";
   try{
-   const result=await api(`/accounts/${encodeURIComponent(recipient.accountNumber)}/deposit`,{
+   const result=await api(`/atm/deposit?destinationAccount=${encodeURIComponent(recipient.accountNumber)}`,{
     method:"POST",body:JSON.stringify({amount})
    });
-   if(recipient.accountNumber===ACCOUNT)await refreshAccount();
+   
    panel("DEPOSIT SUCCESSFUL","The deposit has been recorded.",`
     <div class="bank-balance">${money(result.amount)}</div>
     <div class="bank-row"><span>Recipient</span><strong>${safe(recipient.accountHolderName)}</strong></div>
@@ -323,7 +367,7 @@ function depositAmountScreen(recipient){
 async function balanceScreen(){
  panel("BALANCE ENQUIRY","Retrieving your latest account balance...","");
  try{
-  const data=await api(`/accounts/${encodeURIComponent(ACCOUNT)}/balance`);
+  const data=await api("/atm/balance");
   $("panelContent").innerHTML=`
    <div class="bank-row"><span>Account holder</span><strong>${safe(data.accountHolderName)}</strong></div>
    <div class="bank-row"><span>Account number</span><strong>${safe(data.accountNumber)}</strong></div>
@@ -339,9 +383,9 @@ function transferScreen(){
  <div class="bank-actions"><button class="bank-btn primary" id="findTransferAccount">CONTINUE</button></div>`);
  $("findTransferAccount").onclick=async()=>{
   const number=$("transferAccount").value.trim();
-  if(!number||number===ACCOUNT){note("Enter a different valid account number.",true);return;}
+  if(!number||number===currentAccount.accountNumber){note("Enter a different valid account number.",true);return;}
   try{
-   const recipient=await api("/accounts/"+encodeURIComponent(number));
+   const recipient=await api("/atm/recipient/"+encodeURIComponent(number));
    transferAmountScreen(recipient);
   }catch(e){note(e.message,true);}
  };
@@ -358,7 +402,7 @@ function transferAmountScreen(recipient){
   if(amount>Number(currentAccount.balance)){note("Insufficient funds.",true);return;}
   const button=$("transferConfirm");button.disabled=true;button.textContent="PROCESSING...";
   try{
-   const result=await api(`/accounts/${encodeURIComponent(ACCOUNT)}/transfer`,{
+   const result=await api("/atm/transfer",{
     method:"POST",body:JSON.stringify({recipientAccountNumber:recipient.accountNumber,amount})
    });
    await refreshAccount();
@@ -374,7 +418,7 @@ function transferAmountScreen(recipient){
 async function statementScreen(){
  panel("MINI STATEMENT","Your latest banking transactions...","Loading transactions...");
  try{
-  const transactions=await api(`/accounts/${encodeURIComponent(ACCOUNT)}/transactions`);
+  const transactions=await api("/atm/transactions");
   if(!Array.isArray(transactions)||!transactions.length){
    $("panelContent").innerHTML="<p>No transactions found.</p>";return;
   }
@@ -386,12 +430,16 @@ async function statementScreen(){
  }catch(e){note(e.message,true);}
 }
 
-function endSession(){
- enteredPIN="";attempts=3;currentAccount=null;
+async function endSession(){
+ try{
+  if(currentAccount) await api("/atm/logout",{method:"POST"});
+ }catch(e){console.warn("ATM logout request failed:",e.message);}
+ enteredPIN="";attempts=3;currentAccount=null;cardNumber="";
  attemptsDisplay.textContent="3 attempts remaining";
  message.textContent="Enter your PIN to continue";
  message.style.color="";
  document.querySelectorAll(".key").forEach(k=>k.disabled=false);
+ const enter=$("enterButton");if(enter)enter.disabled=false;
  updatePINDisplay();
  menuContainer.innerHTML=originalMenu;
  showScreen(welcomeScreen);

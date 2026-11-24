@@ -36,9 +36,13 @@
     <section id="cardScreen" class="screen hidden">
         <div class="card-panel">
             <div class="card-icon">▰</div>
-            <h2>Card detected</h2>
-            <p>Please wait while we read your card...</p>
-            <div class="loader"></div>
+            <h2>ENTER YOUR CARD NUMBER</h2>
+            <p>Enter the 16-digit number printed on your M&M Bank card.</p>
+            <input id="cardNumber" type="text" inputmode="numeric"
+                   autocomplete="off" maxlength="19"
+                   placeholder="16-digit card number">
+            <p id="cardMessage" class="message"></p>
+            <button id="cardContinueButton">CONTINUE</button>
         </div>
     </section>
 
